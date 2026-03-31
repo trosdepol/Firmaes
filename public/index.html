@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FirmaES — Estat de signatures</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0a1628;--navy2:#112240;
+  --gold:#c9a227;--gold2:#e8c45a;
+  --cream:#f5f0e8;--muted:#6b7280;
+  --green:#22c55e;--gborder:rgba(201,162,39,.2);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--cream);min-height:100vh}
+.topbar{background:var(--navy2);border-bottom:1px solid var(--gborder);padding:0 2rem;height:52px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600}
+.logo span{color:var(--gold)}
+.topbar-right{display:flex;gap:.7rem;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .85rem;border-radius:2px;border:none;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:500;cursor:pointer;transition:all .2s;text-decoration:none}
+.btn-ghost{background:rgba(255,255,255,.07);color:var(--cream);border:1px solid rgba(255,255,255,.1)}
+.btn-ghost:hover{background:rgba(255,255,255,.12)}
+.btn-gold{background:var(--gold);color:var(--navy);font-weight:700}
+.btn-gold:hover{background:var(--gold2)}
+
+.main{max-width:1100px;margin:0 auto;padding:2rem 1.5rem}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:300;margin-bottom:.3rem}
+.page-title span{color:var(--gold)}
+.page-sub{font-size:.82rem;color:var(--muted);margin-bottom:2rem}
+
+/* COURSE BLOCK */
+.course-block{margin-bottom:2.5rem}
+.course-title{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:var(--cream);margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:.8rem}
+
+/* CLASS GRID */
+.classes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+
+/* CLASS CARD */
+.class-card{background:var(--navy2);border:1px solid rgba(255,255,255,.07);border-radius:3px;overflow:hidden;transition:border-color .2s}
+.class-card:hover{border-color:var(--gborder)}
+.class-card.active{border-color:rgba(201,162,39,.3)}
+.class-card.completed{border-color:rgba(34,197,94,.25)}
+.card-top{padding:.9rem 1rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.05)}
+.card-name{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600}
+.badge{display:inline-flex;align-items:center;gap:.25rem;font-size:.65rem;padding:.18rem .55rem;border-radius:2px;font-weight:500}
+.badge-active{background:rgba(201,162,39,.1);color:var(--gold2);border:1px solid var(--gborder)}
+.badge-done{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.badge-off{background:rgba(255,255,255,.04);color:var(--muted);border:1px solid rgba(255,255,255,.08)}
+
+.card-body{padding:.9rem 1rem}
+
+/* PROGRESS BAR */
+.prog-bg{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-bottom:.35rem}
+.prog-fill{height:100%;border-radius:2px;transition:width .5s}
+.prog-fill.gold{background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.prog-fill.green{background:linear-gradient(90deg,#16a34a,var(--green))}
+.prog-label{display:flex;justify-content:space-between;font-size:.65rem;color:var(--muted);margin-bottom:.8rem}
+
+/* SIGNERS LIST */
+.signers{display:flex;flex-direction:column;gap:.25rem}
+.signer-item{display:flex;align-items:center;gap:.55rem;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.signer-item:last-child{border-bottom:none}
+.si-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.si-name{flex:1;font-size:.78rem;color:var(--cream)}
+.si-name.current{color:var(--gold);font-weight:500}
+.si-name.done{color:rgba(245,240,232,.5)}
+.si-status{font-size:.68rem;color:var(--muted)}
+.si-status.done{color:var(--green)}
+.si-status.current{color:var(--gold)}
+.si-date{font-size:.63rem;color:rgba(255,255,255,.2);margin-left:.3rem}
+
+/* No PDF */
+.no-pdf{font-size:.75rem;color:rgba(255,255,255,.2);font-style:italic;padding:.3rem 0}
+
+/* CURRENT SIGNER HIGHLIGHT */
+.current-banner{background:rgba(201,162,39,.07);border:1px solid var(--gborder);border-radius:2px;padding:.5rem .8rem;font-size:.75rem;color:var(--gold2);margin-bottom:.7rem;display:flex;align-items:center;gap:.5rem}
+
+/* SPINNER */
+.spin{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{display:flex;align-items:center;justify-content:center;padding:4rem;gap:.8rem;color:var(--muted);font-size:.85rem}
+
+/* Last updated */
+.updated{font-size:.68rem;color:rgba(255,255,255,.2);text-align:center;margin-top:1.5rem}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">Firma<span>ES</span></div>
+  <div class="topbar-right">
+    <span style="font-size:.72rem;color:var(--muted)" id="liveTag">● En directe</span>
+    <a href="/admin.html" class="btn btn-ghost">⚙ Admin</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-title">Estat de <span>signatures</span></div>
+  <div class="page-sub">Consulta en temps real l'estat de les firmes per curs i classe</div>
+  <div id="coursesContainer">
+    <div class="loading"><div class="spin"></div> Carregant...</div>
+  </div>
+  <div class="updated" id="lastUpdated"></div>
+</div>
+
+<script>
+async function loadData() {
+  try {
+    const r = await fetch('/api/public/courses');
+    const d = await r.json();
+    renderCourses(d.courses);
+    document.getElementById('lastUpdated').textContent =
+      'Actualitzat: ' + new Date().toLocaleTimeString('ca-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  } catch(e) {
+    document.getElementById('coursesContainer').innerHTML =
+      '<div style="color:#fca5a5;padding:2rem;text-align:center">Error connectant amb el servidor</div>';
+  }
+}
+
+function renderCourses(courses) {
+  const container = document.getElementById('coursesContainer');
+  container.innerHTML = '';
+
+  for (const [courseId, course] of Object.entries(courses)) {
+    const block = document.createElement('div');
+    block.className = 'course-block';
+
+    const totalSigned = course.classes.reduce((a,c)=>a+c.signedCount,0);
+    const totalSigners= course.classes.reduce((a,c)=>a+c.totalSigners,0);
+
+    block.innerHTML = `
+      <div class="course-title">
+        ${esc(course.name)}
+        <span style="font-size:.75rem;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:400">
+          ${totalSigned}/${totalSigners} signatures totals
+        </span>
+      </div>
+      <div class="classes-grid">
+        ${course.classes.map(cls => renderClassCard(cls)).join('')}
+      </div>
+    `;
+    container.appendChild(block);
+  }
+}
+
+function renderClassCard(cls) {
+  const pct  = cls.totalSigners===0 ? 0 : Math.round(cls.signedCount/cls.totalSigners*100);
+  const done = cls.completed;
+
+  const statusBadge = !cls.active ? `<span class="badge badge-off">○ Inactiu</span>`
+                    : done ? `<span class="badge badge-done">✅ Completat</span>`
+                    : `<span class="badge badge-active">● En curs</span>`;
+
+  let signersHtml = '';
+  if (!cls.pdfName) {
+    signersHtml = '<div class="no-pdf">Sense document assignat</div>';
+  } else if (cls.signers.length === 0) {
+    signersHtml = '<div class="no-pdf">Sense signataris</div>';
+  } else {
+    const currentBanner = cls.active && !done && cls.currentSigner
+      ? `<div class="current-banner">👆 Torn de: <strong>${esc(cls.currentSigner)}</strong></div>` : '';
+
+    const rows = cls.signers.map(s => {
+      const isCurrent = cls.active && s.status==='pending' && s.name===cls.currentSigner;
+      const isDone    = s.status==='signed';
+      const dotColor  = isDone ? '#22c55e' : isCurrent ? '#c9a227' : 'rgba(255,255,255,.1)';
+      return `
+        <div class="signer-item">
+          <div class="si-dot" style="background:${dotColor}"></div>
+          <div class="si-name ${isCurrent?'current':isDone?'done':''}">${esc(s.name)}</div>
+          <div class="si-status ${isDone?'done':isCurrent?'current':''}">
+            ${isDone ? '✓' : isCurrent ? 'Ara' : '—'}
+          </div>
+          ${isDone && s.signedAt ? `<div class="si-date">${formatDate(s.signedAt)}</div>` : ''}
+        </div>`;
+    }).join('');
+
+    signersHtml = currentBanner + `<div class="signers">${rows}</div>`;
+  }
+
+  return `
+  <div class="class-card ${done?'completed':cls.active?'active':''}">
+    <div class="card-top">
+      <div class="card-name">Classe ${esc(cls.className)}</div>
+      ${statusBadge}
+    </div>
+    <div class="card-body">
+      ${cls.active && cls.totalSigners > 0 ? `
+      <div class="prog-bg">
+        <div class="prog-fill ${done?'green':'gold'}" style="width:${pct}%"></div>
+      </div>
+      <div class="prog-label">
+        <span>${cls.signedCount} de ${cls.totalSigners} firmes</span>
+        <span>${pct}%</span>
+      </div>` : ''}
+      ${signersHtml}
+    </div>
+  </div>`;
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function formatDate(iso){
+  if(!iso)return'';
+  return new Date(iso).toLocaleDateString('ca-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+
+// Carrega inicial + refresca cada 15s
+loadData();
+setInterval(loadData, 15000);
+</script>
+</body>
+</html>

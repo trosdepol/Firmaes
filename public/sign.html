@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FirmaES — Firma el document</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0a1628;--navy2:#112240;--navy3:#1a3050;
+  --gold:#c9a227;--gold2:#e8c45a;
+  --cream:#f5f0e8;--muted:#6b7280;
+  --green:#22c55e;--gborder:rgba(201,162,39,.22);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--cream);min-height:100vh}
+.topbar{background:var(--navy2);border-bottom:1px solid var(--gborder);padding:0 1.5rem;height:52px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600}
+.logo span{color:var(--gold)}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.1rem;border-radius:2px;border:none;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-gold{background:var(--gold);color:var(--navy);font-weight:700}
+.btn-gold:hover:not(:disabled){background:var(--gold2)}
+.btn-ghost{background:rgba(255,255,255,.07);color:var(--cream);border:1px solid rgba(255,255,255,.1)}
+.btn-ghost:hover:not(:disabled){background:rgba(255,255,255,.13)}
+.btn-green{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(74,222,128,.25)}
+.btn-green:hover:not(:disabled){background:rgba(34,197,94,.25)}
+.btn-full{width:100%;justify-content:center}
+.btn-lg{padding:.75rem 1.4rem;font-size:.88rem}
+
+.main{max-width:700px;margin:0 auto;padding:2rem 1.5rem;display:flex;flex-direction:column;gap:1rem}
+
+/* CARDS */
+.card{background:var(--navy2);border:1px solid rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.card-head{padding:.85rem 1.1rem;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between}
+.card-label{font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(201,162,39,.65);font-weight:500}
+.card-body{padding:1.1rem}
+
+/* INFO BOX */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:.5rem}
+.info-item .lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:.15rem}
+.info-item .val{font-size:.85rem;color:var(--cream);font-weight:500}
+
+/* STEPPER */
+.stepper{display:flex;flex-direction:column;gap:.3rem}
+.step{display:flex;align-items:center;gap:.65rem;padding:.4rem 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.step:last-child{border-bottom:none}
+.step-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0}
+.sd-done{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(74,222,128,.25)}
+.sd-current{background:var(--gold);color:var(--navy)}
+.sd-wait{background:rgba(255,255,255,.06);color:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.08)}
+.step-name{flex:1;font-size:.8rem}
+.step-name.me{font-weight:600;color:var(--gold)}
+.step-name.done{color:rgba(245,240,232,.4)}
+.step-meta{font-size:.68rem;color:var(--muted)}
+
+/* PROGRESS */
+.prog-bg{height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;margin-bottom:.35rem}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:3px;transition:width .5s}
+.prog-label{display:flex;justify-content:space-between;font-size:.67rem;color:var(--muted)}
+
+/* DROP ZONE */
+.drop-zone{border:2px dashed var(--gborder);border-radius:3px;padding:1.5rem;text-align:center;cursor:pointer;transition:all .3s;display:flex;flex-direction:column;align-items:center;gap:.5rem}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--gold);background:rgba(201,162,39,.04)}
+.drop-loaded{background:rgba(34,197,94,.07);border:1px solid rgba(74,222,128,.2);border-radius:2px;padding:.6rem 1rem;font-size:.8rem;color:#4ade80;display:flex;align-items:center;gap:.6rem;margin-top:.7rem}
+
+/* ALERT */
+.alert{border-radius:3px;padding:.75rem 1rem;font-size:.78rem;line-height:1.6}
+.alert-warn{background:rgba(217,119,6,.07);border:1px solid rgba(217,119,6,.2);color:#fcd34d}
+.alert-ok{background:rgba(34,197,94,.07);border:1px solid rgba(74,222,128,.2);color:#86efac}
+.alert-info{background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);color:#93c5fd}
+
+/* STATES */
+.state-icon{font-size:3rem;text-align:center;margin-bottom:.8rem}
+.state-title{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:300;text-align:center;margin-bottom:.4rem}
+.state-sub{text-align:center;color:var(--muted);font-size:.82rem;line-height:1.7}
+
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--gold);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.page-spin{display:flex;align-items:center;justify-content:center;min-height:60vh;gap:.8rem;color:var(--muted)}
+
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--navy2);border:1px solid var(--gborder);color:var(--cream);padding:.65rem 1.4rem;border-radius:3px;font-size:.8rem;z-index:999;transition:transform .3s;white-space:nowrap;max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:rgba(74,222,128,.35)}
+.toast.err{border-color:rgba(220,38,38,.35);color:#fca5a5}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">Firma<span>ES</span></div>
+  <a href="/index.html" style="font-size:.75rem;color:var(--muted);text-decoration:none">← Estat general</a>
+</div>
+
+<div class="main" id="main">
+  <div class="page-spin">
+    <div class="spin" style="width:24px;height:24px;border-width:3px"></div>
+    <span>Carregant...</span>
+  </div>
+</div>
+
+<input type="file" id="pdfFile" accept=".pdf" style="display:none">
+<div class="toast" id="toast"></div>
+
+<script>
+// Llegeix params de la URL
+const params   = new URLSearchParams(window.location.search);
+const classKey = params.get('class');
+const signerId = params.get('signer');
+const token    = params.get('token');
+
+let sessionData  = null;
+let uploadedPdf  = null;
+
+async function init() {
+  if (!classKey || !signerId || !token) {
+    showError('Enllaç no vàlid. Comprova que has copiat l\'URL completa.');
+    return;
+  }
+  try {
+    const r = await fetch(`/api/sign/${classKey}/${signerId}/${token}`);
+    const d = await r.json();
+    if (!r.ok) { showError(d.error); return; }
+    sessionData = d;
+    render();
+  } catch(e) {
+    showError('No s\'ha pogut connectar amb el servidor.');
+  }
+}
+
+function render() {
+  const d = sessionData;
+
+  // Estat: ja has signat
+  if (d.signer.status === 'signed') {
+    renderDone(); return;
+  }
+
+  // Estat: no és el teu torn
+  if (!d.isMyTurn) {
+    renderWaiting(); return;
+  }
+
+  // Estat: és el teu torn!
+  renderMyTurn();
+}
+
+function renderDone() {
+  const d = sessionData;
+  document.getElementById('main').innerHTML = `
+    <div class="card">
+      <div class="card-body" style="text-align:center;padding:2.5rem">
+        <div class="state-icon">✅</div>
+        <div class="state-title">Ja has signat</div>
+        <div class="state-sub">Has confirmat la teva firma del document<br><strong>${esc(d.pdfName)}</strong></div>
+      </div>
+    </div>
+    ${renderStepperCard(d)}
+    <a href="/index.html" class="btn btn-ghost btn-full" style="justify-content:center">← Veure estat general</a>
+  `;
+}
+
+function renderWaiting() {
+  const d = sessionData;
+  document.getElementById('main').innerHTML = `
+    <div class="card">
+      <div class="card-body" style="text-align:center;padding:2.5rem">
+        <div class="state-icon">⏳</div>
+        <div class="state-title">Encara no és el teu torn</div>
+        <div class="state-sub">
+          Ara li toca signar a <strong>${esc(d.currentSignerName)}</strong>.<br>
+          Ets el número <strong>${d.position}</strong> de <strong>${d.total}</strong>.<br><br>
+          Torna a aquesta pàgina quan sigui el teu torn.<br>
+          <span style="font-size:.75rem;color:rgba(255,255,255,.3)">Pots marcar-la com a favorita.</span>
+        </div>
+      </div>
+    </div>
+    ${renderStepperCard(d)}
+    <button class="btn btn-ghost btn-full" onclick="init()" style="justify-content:center">🔄 Actualitzar</button>
+  `;
+}
+
+function renderMyTurn() {
+  const d = sessionData;
+  const signed = d.signers.filter(s=>s.status==='signed').length;
+  const pct    = Math.round(signed/d.total*100);
+  const prevSigned = d.signers.filter(s=>s.status==='signed');
+
+  document.getElementById('main').innerHTML = `
+    <!-- CAP -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-label">Document per signar</div>
+        <span style="font-size:.72rem;color:var(--gold)">${esc(d.courseName)} — Classe ${esc(d.className)}</span>
+      </div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="lbl">El teu nom</div>
+            <div class="val">${esc(d.signer.name)}</div>
+          </div>
+          <div class="info-item">
+            <div class="lbl">Torn</div>
+            <div class="val">${d.position} de ${d.total}</div>
+          </div>
+        </div>
+        <div class="prog-bg"><div class="prog-fill" style="width:${pct}%"></div></div>
+        <div class="prog-label"><span>${signed} de ${d.total} han signat</span><span>${pct}%</span></div>
+      </div>
+    </div>
+
+    <!-- FIRMES ANTERIORS -->
+    ${prevSigned.length > 0 ? `
+    <div class="alert alert-ok">
+      ✅ <strong>${prevSigned.length} firma${prevSigned.length!==1?'es':''} incorporada${prevSigned.length!==1?'s':''}</strong> al document actual:<br>
+      ${prevSigned.map(s=>`<span style="font-size:.75rem">· ${esc(s.name)}</span>`).join('  ')}
+    </div>` : ''}
+
+    <!-- PAS 1: DESCARREGAR -->
+    <div class="card">
+      <div class="card-head"><div class="card-label">Pas 1 · Descarrega i revisa el document</div></div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:.8rem">
+        <p style="font-size:.8rem;color:var(--muted);line-height:1.6">
+          Descarrega el PDF, revisa'l i firma'l amb l'eina que vulguis (Adobe, AutoFirma, etc.). 
+          Si no tens cap eina, puja el mateix fitxer descarregat.
+        </p>
+        <a href="/api/pdf/${classKey}" download class="btn btn-ghost btn-full btn-lg">
+          ⬇ Descarregar PDF (versió ${d.pdfVersion})
+        </a>
+      </div>
+    </div>
+
+    <!-- PAS 2: PUJAR -->
+    <div class="card">
+      <div class="card-head"><div class="card-label">Pas 2 · Puja el document signat</div></div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:.8rem">
+        <p style="font-size:.8rem;color:var(--muted);line-height:1.6">
+          Un cop revisat (i signat si cal), puja el PDF aquí per passar-lo al següent.
+        </p>
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('pdfFile').click()">
+          <div style="font-size:2rem">📤</div>
+          <div style="font-size:.82rem;color:rgba(245,240,232,.6)">Fes clic o arrossega el PDF aquí</div>
+          <div style="font-size:.72rem;color:var(--muted)">Màxim 50MB</div>
+        </div>
+        <div id="fileLoaded" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- AVÍS -->
+    <div class="alert alert-warn">
+      ⚠️ En confirmar, el document passarà automàticament al següent signatari. Assegura't que el PDF és correcte.
+    </div>
+
+    <!-- CONFIRMAR -->
+    <button class="btn btn-gold btn-full btn-lg" id="confirmBtn" onclick="confirmSign()" disabled>
+      ✅ Confirmar i passar al següent
+    </button>
+
+    <div style="font-size:.68rem;color:rgba(255,255,255,.18);text-align:center;line-height:1.6">
+      La teva confirmació quedarà registrada amb data i hora.
+    </div>
+
+    <!-- STEPPER -->
+    ${renderStepperCard(d)}
+  `;
+
+  // Setup file input + drop
+  document.getElementById('pdfFile').onchange = handleFileSelect;
+  setupDrop();
+}
+
+function renderStepperCard(d) {
+  const rows = d.signers.map((s, i) => {
+    const isMe      = s.name === d.signer.name;
+    const isDone    = s.status === 'signed';
+    const isCurrent = !isDone && d.signers.filter(x=>x.status==='signed').length === i;
+    const dotCls    = isDone ? 'sd-done' : isCurrent ? 'sd-current' : 'sd-wait';
+    return `
+    <div class="step">
+      <div class="step-dot ${dotCls}">${isDone?'✓':i+1}</div>
+      <div class="step-name ${isMe?'me':isDone?'done':''}">${esc(s.name)}${isMe?' (tu)':''}</div>
+      <div class="step-meta">${isDone?'✓ Signat'+(s.signedAt?' · '+formatDate(s.signedAt):''):isCurrent?'👆 Ara':'En espera'}</div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="card">
+    <div class="card-head"><div class="card-label">Ordre de signatures</div></div>
+    <div class="card-body"><div class="stepper">${rows}</div></div>
+  </div>`;
+}
+
+// ── FILE HANDLING ─────────────────────────────────────────────
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  processFile(file);
+  e.target.value = '';
+}
+
+async function processFile(file) {
+  if (file.type !== 'application/pdf') { showToast('Només arxius PDF','err'); return; }
+  if (file.size > 50*1024*1024) { showToast('El fitxer supera els 50MB','err'); return; }
+  const buf = await file.arrayBuffer();
+  uploadedPdf = new Uint8Array(buf);
+  uploadedPdf._name = file.name;
+  uploadedPdf._size = file.size;
+
+  document.getElementById('fileLoaded').style.display = 'flex';
+  document.getElementById('fileLoaded').innerHTML = `
+    <div class="drop-loaded">
+      📄 ${esc(file.name)}
+      <span style="color:var(--muted);font-size:.72rem;margin-left:.3rem">${(file.size/1024/1024).toFixed(2)} MB</span>
+      <button onclick="clearFile()" style="margin-left:auto;background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:.85rem">✕</button>
+    </div>`;
+  document.getElementById('confirmBtn').disabled = false;
+  showToast('PDF carregat','ok');
+}
+
+function clearFile() {
+  uploadedPdf = null;
+  document.getElementById('fileLoaded').style.display = 'none';
+  document.getElementById('confirmBtn').disabled = true;
+}
+
+function setupDrop() {
+  const zone = document.getElementById('dropZone');
+  if (!zone) return;
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+  });
+}
+
+// ── CONFIRM ───────────────────────────────────────────────────
+async function confirmSign() {
+  if (!uploadedPdf) { showToast('Puja primer el PDF','err'); return; }
+
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Enviant...';
+
+  try {
+    const fd = new FormData();
+    const blob = new Blob([uploadedPdf], {type:'application/pdf'});
+    fd.append('pdf', blob, uploadedPdf._name || 'document.pdf');
+    fd.append('signerIdx', sessionData.position - 1);
+    fd.append('token', token);
+
+    const r = await fetch(`/api/sign/${classKey}/${signerId}/${token}`, {
+      method:'POST', body:fd
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+
+    showToast('Firma confirmada!','ok');
+
+    // Actualitza i re-renderitza
+    await init();
+  } catch(e) {
+    showToast(e.message,'err');
+    btn.disabled = false;
+    btn.innerHTML = '✅ Confirmar i passar al següent';
+  }
+}
+
+function showError(msg) {
+  document.getElementById('main').innerHTML = `
+    <div class="card">
+      <div class="card-body" style="text-align:center;padding:2.5rem">
+        <div class="state-icon">❌</div>
+        <div class="state-title">Error</div>
+        <div class="state-sub">${esc(msg)}</div>
+        <a href="/index.html" class="btn btn-ghost" style="margin-top:1.5rem">← Tornar a l'inici</a>
+      </div>
+    </div>`;
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function formatDate(iso){
+  if(!iso)return'';
+  return new Date(iso).toLocaleDateString('ca-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+let tid;
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`toast show${type?' '+type:''}`;
+  clearTimeout(tid); tid=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+init();
+</script>
+</body>
+</html>
