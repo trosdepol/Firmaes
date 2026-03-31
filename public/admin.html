@@ -301,10 +301,22 @@ async function renderClass(key) {
           ${cls.signers.map((s,i) => signerRowHtml(s, i, i===currentIdx, key)).join('') || 
             '<div style="font-size:.78rem;color:var(--muted);padding:.3rem 0">Cap signatari afegit</div>'}
         </div>
-        <div class="add-signer">
-          <input class="inp" id="newSignerName-${key}" placeholder="Nom del signatari" style="flex:1"
-            onkeydown="if(event.key==='Enter')addSigner('${key}')">
-          <button class="btn btn-gold" onclick="addSigner('${key}')">+ Afegir</button>
+        <div style="display:flex;flex-direction:column;gap:.5rem">
+          <div class="add-signer">
+            <input class="inp" id="newSignerName-${key}" placeholder="Nom" style="flex:2"
+              onkeydown="if(event.key==='Enter')document.getElementById('newSignerEmail-'+key).focus()">
+            <input class="inp" id="newSignerEmail-${key}" placeholder="correu@exemple.com" style="flex:2"
+              onkeydown="if(event.key==='Enter')addSigner('${key}')">
+            <button class="btn btn-gold" onclick="addSigner('${key}')">+ Afegir</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
+            <span style="font-size:.68rem;color:var(--muted)">o</span>
+            <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
+          </div>
+          <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="importCsv('${key}')">
+            📊 Importar des de CSV (Col. A: Nom &nbsp;·&nbsp; Col. B: Email)
+          </button>
         </div>
       </div>
     </div>
@@ -344,7 +356,10 @@ function signerRowHtml(s, i, isCurrent, key) {
        draggable="true" data-id="${s.id}" data-key="${key}">
     <span class="drag-handle" title="Arrossega per canviar ordre">⠿</span>
     <div class="signer-num ${isCurrent?'current':''} ${done?'done':''}">${done?'✓':i+1}</div>
-    <div class="signer-name">${esc(s.name)}</div>
+    <div class="signer-name" style="flex:1;min-width:0">
+      <div>${esc(s.name)}</div>
+      ${s.email ? `<div style="font-size:.68rem;color:var(--muted)">${esc(s.email)}</div>` : ''}
+    </div>
     <div class="signer-status ${done?'done':isCurrent?'current':''}">
       ${done ? `✓ ${formatDate(s.signedAt)}` : isCurrent ? '👆 Torn actual' : 'En espera'}
     </div>
@@ -433,17 +448,65 @@ function uploadPdf(key) {
 }
 
 async function addSigner(key) {
-  const inp = document.getElementById(`newSignerName-${key}`);
-  const name = inp?.value.trim();
+  const nameInp  = document.getElementById(`newSignerName-${key}`);
+  const emailInp = document.getElementById(`newSignerEmail-${key}`);
+  const name  = nameInp?.value.trim();
+  const email = emailInp?.value.trim();
   if (!name) { showToast('Escriu un nom','err'); return; }
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('Correu no vàlid','err'); return; }
 
   const r = await fetch(`${API}/api/admin/classes/${key}/signers`, {
-    method:'POST', headers:headers(), body:JSON.stringify({name})
+    method:'POST', headers:headers(), body:JSON.stringify({name, email})
   });
   const d = await r.json();
   if (!r.ok) { showToast(d.error,'err'); return; }
+  if (nameInp) nameInp.value = '';
+  if (emailInp) emailInp.value = '';
   showToast(`${name} afegit`,'ok');
   await loadCourses(); renderClass(key);
+}
+
+function importCsv(key) {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.csv,text/csv';
+  inp.style.cssText = 'position:fixed;top:-9999px';
+  document.body.appendChild(inp);
+  inp.addEventListener('change', async () => {
+    const file = inp.files[0];
+    if (!file) { inp.remove(); return; }
+    const text = await file.text();
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+    const signers = [];
+    const errors = [];
+    lines.forEach((line, i) => {
+      // Suporta comes i punt i comes (Google Sheets pot usar les dues)
+      const sep = line.includes(';') ? ';' : ',';
+      const parts = line.split(sep).map(p => p.trim().replace(/^"|"$/g,''));
+      const name  = parts[0] || '';
+      const email = parts[1] || '';
+      if (!name) return;
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errors.push(`Fila ${i+1}: correu invàlid (${email})`);
+        return;
+      }
+      signers.push({name, email});
+    });
+    if (errors.length) { showToast(errors[0],'err'); inp.remove(); return; }
+    if (!signers.length) { showToast('Cap signatari trobat al CSV','err'); inp.remove(); return; }
+
+    showToast(`Afegint ${signers.length} persones...`);
+    let added = 0;
+    for (const s of signers) {
+      const r = await fetch(`${API}/api/admin/classes/${key}/signers`, {
+        method:'POST', headers:headers(), body:JSON.stringify(s)
+      });
+      if (r.ok) added++;
+    }
+    showToast(`${added} persones importades ✓`,'ok');
+    await loadCourses(); renderClass(key);
+    inp.remove();
+  });
+  inp.click();
 }
 
 async function deleteSigner(key, id) {
