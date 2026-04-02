@@ -383,7 +383,7 @@ app.post('/api/admin/classes/:classKey/reset', requireAdmin, function(req, res) 
 app.get('/api/admin/classes/:classKey/links', requireAdmin, function(req, res) {
   const cls = getClass(req.params.classKey);
   if (!cls) return res.status(404).json({ error: 'Classe no trobada' });
-  const baseUrl = 'http://localhost:' + PORT;
+  const baseUrl = BASE_URL;
   const links = cls.signers.map(function(s) {
     return {
       name: s.name,
