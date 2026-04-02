@@ -84,9 +84,28 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--cream);
 /* Last updated */
 .updated{font-size:.68rem;color:rgba(255,255,255,.2);text-align:center;margin-top:1.5rem}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1)}
+
+/* WAKE UP SCREEN */
+#wakeScreen{position:fixed;inset:0;background:#0a1628;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;transition:opacity .5s ease}
+#wakeScreen.hidden{opacity:0;pointer-events:none}
+.wake-logo{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:600;color:#f5f0e8}
+.wake-logo span{color:#c9a227}
+.wake-spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,.1);border-top-color:#c9a227;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.wake-msg{font-size:.85rem;color:rgba(245,240,232,.5);text-align:center;line-height:1.7;max-width:300px}
+.wake-bar-bg{width:200px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.wake-bar{height:100%;background:linear-gradient(90deg,#c9a227,#e8c45a);border-radius:2px;width:0%;transition:width .3s ease}
 </style>
 </head>
 <body>
+<!-- WAKE UP SCREEN -->
+<div id="wakeScreen">
+  <div class="wake-logo">Firma<span>ES</span></div>
+  <div class="wake-spinner"></div>
+  <div class="wake-bar-bg"><div class="wake-bar" id="wakeBar"></div></div>
+  <div class="wake-msg" id="wakeMsg">Iniciant el servidor...<br><span style="font-size:.75rem;opacity:.6">Pot trigar fins a 30 segons la primera vegada</span></div>
+</div>
+
 
 <div class="topbar">
   <div class="logo">Firma<span>ES</span></div>
@@ -209,6 +228,53 @@ function formatDate(iso){
 // Carrega inicial + refresca cada 15s
 loadData();
 setInterval(loadData, 15000);
+
+// WAKE UP CHECK
+(function() {
+  const screen = document.getElementById('wakeScreen');
+  const bar    = document.getElementById('wakeBar');
+  const msg    = document.getElementById('wakeMsg');
+  if (!screen) return;
+
+  let progress = 0;
+  let attempts = 0;
+  const maxAttempts = 20; // 20 * 2s = 40s màxim
+
+  const interval = setInterval(() => {
+    progress = Math.min(progress + (100 / maxAttempts), 95);
+    bar.style.width = progress + '%';
+  }, 2000);
+
+  function checkServer() {
+    fetch('/api/public/courses', { cache: 'no-store' })
+      .then(r => {
+        if (r.ok) {
+          clearInterval(interval);
+          bar.style.width = '100%';
+          msg.innerHTML = '✓ Servidor llest!';
+          setTimeout(() => {
+            screen.classList.add('hidden');
+            setTimeout(() => screen.remove(), 500);
+          }, 400);
+        } else { retry(); }
+      })
+      .catch(() => retry());
+  }
+
+  function retry() {
+    attempts++;
+    if (attempts >= maxAttempts) {
+      clearInterval(interval);
+      msg.innerHTML = 'El servidor tarda més del normal.<br><button onclick="location.reload()" style="margin-top:.5rem;background:#c9a227;color:#0a1628;border:none;padding:.4rem .9rem;border-radius:2px;cursor:pointer;font-weight:600">Tornar a intentar</button>';
+      return;
+    }
+    setTimeout(checkServer, 2000);
+  }
+
+  // Primera comprovació immediata
+  checkServer();
+})();
+
 </script>
 </body>
 </html>
