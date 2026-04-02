@@ -75,7 +75,7 @@ function saveDb(db) {
 
 let db = loadDb();
 console.log('DB carregada. Classes:', Object.keys(db.classes).join(', '));
-
+console.log('BASE_URL:', BASE_URL);
 // ── MULTER ───────────────────────────────────────────────────
 function makeUploader(classKey) {
   return multer({
